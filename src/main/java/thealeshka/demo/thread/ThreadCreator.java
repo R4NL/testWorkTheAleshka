@@ -1,17 +1,33 @@
 package thealeshka.demo.thread;
 
 import thealeshka.demo.buffer.Buffer;
+import thealeshka.demo.logger.MyLogger;
 import thealeshka.demo.thread.popThread.PopThread;
 import thealeshka.demo.thread.pushThread.PushThread;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ThreadCreator {
     private int read;
     private int write;
-    private Buffer buffer;
+    private volatile Buffer buffer;
+    private MyLogger logger;
 
+    public ThreadCreator(int read, int write, MyLogger logger,Buffer bufer) {
+        this.read = read;
+        this.write = write;
+        this.logger = logger;
+        this.buffer =bufer;
+    }
+
+    public ThreadCreator(int read, int write, MyLogger logger) {
+        this.read = read;
+        this.write = write;
+        this.logger = logger;
+        this.buffer = new Buffer(10);
+    }
 
     public ThreadCreator(int read, int write, Buffer buffer) {
         this.read = read;
@@ -29,14 +45,19 @@ public class ThreadCreator {
     public ThreadCreator() {
     }
 
+
     public void create() {
         List<Thread> pop = new ArrayList<>();
         List<Thread> push = new ArrayList<>();
         for (int i = 0; i < read; i++) {
-            pop.add(new Thread(new PopThread(buffer)));
+            Thread t = new Thread(new PopThread(buffer,logger));
+            t.setName("поток чтения с номером " + i);
+            pop.add(t);
         }
         for (int i = 0; i < write; i++) {
-            push.add(new Thread(new PushThread(buffer)));
+            Thread t = new Thread(new PushThread(buffer,logger));
+            t.setName("поток записи с номером  " + i);
+            push.add(t);
         }
 
         for (Thread t : pop) {
@@ -64,4 +85,32 @@ public class ThreadCreator {
         }
     }
 
+    public List<String> getBuffer() {
+        System.out.println(buffer.getBuffer());
+        return buffer.getBuffer();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ThreadCreator that = (ThreadCreator) o;
+        return read == that.read &&
+                write == that.write &&
+                Objects.equals(buffer, that.buffer);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(read, write, buffer);
+    }
+
+    @Override
+    public String toString() {
+        return "ThreadCreator{" +
+                "read=" + read +
+                ", write=" + write +
+                ", buffer=" + buffer +
+                '}';
+    }
 }

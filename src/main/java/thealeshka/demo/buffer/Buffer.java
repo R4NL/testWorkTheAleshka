@@ -1,15 +1,14 @@
 package thealeshka.demo.buffer;
 
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 
 public class Buffer {
-    private volatile Queue<String> buffer;
+    private volatile List<String> buffer;
     private int maxQuantity;
 
     public Buffer(int maxQuantity) {
         this.maxQuantity = maxQuantity;
-        buffer = new PriorityQueue<>();
+        buffer = Collections.synchronizedList(new ArrayList<>());
     }
 
     public Buffer() {
@@ -24,7 +23,6 @@ public class Buffer {
             }
         }
         buffer.add(a);
-        System.out.println(buffer);
         notify();
     }
 
@@ -36,17 +34,23 @@ public class Buffer {
                 e.printStackTrace();
             }
         }
-        String a = buffer.poll();
-        System.out.println(buffer);
+        String a = buffer.remove(0);
         notify();
         return a;
     }
 
-    public Queue<String> getBuffer() {
-        return buffer;
+    public List<String> getBuffer() {
+        List<String> res=new ArrayList<>();
+        synchronized (buffer) {
+            System.out.println(buffer);
+            for (String a:buffer) {
+               res.add(a);
+            }
+        }
+        return res;
     }
 
-    public void setBuffer(Queue<String> buffer) {
+    public void setBuffer(List<String> buffer) {
         this.buffer = buffer;
     }
 
@@ -56,5 +60,27 @@ public class Buffer {
 
     public void setMaxQuantity(int maxQuantity) {
         this.maxQuantity = maxQuantity;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Buffer buffer1 = (Buffer) o;
+        return maxQuantity == buffer1.maxQuantity &&
+                Objects.equals(buffer, buffer1.buffer);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(buffer, maxQuantity);
+    }
+
+    @Override
+    public String toString() {
+        return "Buffer{" +
+                "buffer=" + buffer +
+                ", maxQuantity=" + maxQuantity +
+                '}';
     }
 }
